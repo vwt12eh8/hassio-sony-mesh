@@ -169,6 +169,11 @@ class MESHMD(MESHCore):
         await self.send_config(True)
 
 
+class MESHPA(MESHCore):
+    async def _connected(self):
+        await self.send_cmd(pack("<BBBQHBBBB", 1, 0, 0, 0, 0, 2, 2, 2, 0x1C))
+
+
 class MESHEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
@@ -207,6 +212,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         core = MESHBU(hass, entry)
     elif name.startswith("MESH-100MD"):
         core = MESHMD(hass, entry)
+    elif name.startswith("MESH-100PA"):
+        core = MESHPA(hass, entry)
     else:
         core = MESHCore(hass, entry)
     entry.async_on_unload(bluetooth.async_register_callback(hass, core.on_found, {

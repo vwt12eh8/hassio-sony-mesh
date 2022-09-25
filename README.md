@@ -11,7 +11,7 @@
 * [ ] MESH-100GP
 * [x] MESH-100LE
 * [x] MESH-100MD
-* [ ] MESH-100PA
+* [x] MESH-100PA
 * [ ] MESH-100TM
 
 ## References
