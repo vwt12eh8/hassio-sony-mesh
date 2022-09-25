@@ -8,6 +8,15 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MESHCore, MESHEntity
 
+_ORIENTATIONS = {
+    1: "left",
+    2: "bottom",
+    3: "front",
+    4: "back",
+    5: "top",
+    6: "right",
+}
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     core: MESHCore = hass.data[entry.entry_id]
@@ -51,7 +60,17 @@ class MESHBatteryEntity(MESHEntity, SensorEntity):
         self.async_write_ha_state()
 
 
-class MESHHumidityEntity(MESHEntity, SensorEntity):
+class MESHSensorEntity(MESHEntity, SensorEntity):
+    async def async_added_to_hass(self):
+        await super().async_added_to_hass()
+        self._subscribe(self.core.received, self._received)
+
+    def _connect_changed(self, connected: bool):
+        self._attr_native_value = None
+        super()._connect_changed(connected)
+
+
+class MESHHumidityEntity(MESHSensorEntity):
     _attr_device_class = SensorDeviceClass.HUMIDITY
     _attr_name = "Humidity"
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -61,22 +80,14 @@ class MESHHumidityEntity(MESHEntity, SensorEntity):
         super().__init__(core)
         self._attr_unique_id = f"{name}-humidity"
 
-    async def async_added_to_hass(self):
-        await super().async_added_to_hass()
-        self._subscribe(self.core.received, self.__received)
-
-    def _connect_changed(self, connected: bool):
-        self._attr_native_value = None
-        super()._connect_changed(connected)
-
-    def __received(self, data: bytes):
+    def _received(self, data: bytes):
         if data[:2] != b"\x01\x00":
             return
         self._attr_native_value = int.from_bytes(data[6:8], "little")
         self.async_write_ha_state()
 
 
-class MESHIlluminanceEntity(MESHEntity, SensorEntity):
+class MESHIlluminanceEntity(MESHSensorEntity):
     _attr_device_class = SensorDeviceClass.ILLUMINANCE
     _attr_name = "Illuminance"
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -86,32 +97,14 @@ class MESHIlluminanceEntity(MESHEntity, SensorEntity):
         super().__init__(core)
         self._attr_unique_id = f"{name}-illuminance"
 
-    async def async_added_to_hass(self):
-        await super().async_added_to_hass()
-        self._subscribe(self.core.received, self.__received)
-
-    def _connect_changed(self, connected: bool):
-        self._attr_native_value = None
-        super()._connect_changed(connected)
-
-    def __received(self, data: bytes):
+    def _received(self, data: bytes):
         if data[:2] != b"\x01\x00":
             return
         self._attr_native_value = int.from_bytes(data[6:8], "little") * 10
         self.async_write_ha_state()
 
 
-ORIENTATIONS = {
-    1: "left",
-    2: "bottom",
-    3: "front",
-    4: "back",
-    5: "top",
-    6: "right",
-}
-
-
-class MESHOrientationEntity(MESHEntity, SensorEntity):
+class MESHOrientationEntity(MESHSensorEntity):
     _attr_name = "Orientation"
     _attr_device_class = "sony_mesh__orientation"
 
@@ -119,22 +112,14 @@ class MESHOrientationEntity(MESHEntity, SensorEntity):
         super().__init__(core)
         self._attr_unique_id = f"{name}-orientation"
 
-    async def async_added_to_hass(self):
-        await super().async_added_to_hass()
-        self._subscribe(self.core.received, self.__received)
-
-    def _connect_changed(self, connected: bool):
-        self._attr_native_value = None
-        super()._connect_changed(connected)
-
-    def __received(self, data: bytes):
+    def _received(self, data: bytes):
         if data[:2] != b"\x01\x03":
             return
-        self._attr_native_value = ORIENTATIONS.get(data[2])
+        self._attr_native_value = _ORIENTATIONS.get(data[2])
         self.async_write_ha_state()
 
 
-class MESHProximityEntity(MESHEntity, SensorEntity):
+class MESHProximityEntity(MESHSensorEntity):
     _attr_name = "Proximity"
     _attr_state_class = SensorStateClass.MEASUREMENT
 
@@ -142,22 +127,14 @@ class MESHProximityEntity(MESHEntity, SensorEntity):
         super().__init__(core)
         self._attr_unique_id = f"{name}-proximity"
 
-    async def async_added_to_hass(self):
-        await super().async_added_to_hass()
-        self._subscribe(self.core.received, self.__received)
-
-    def _connect_changed(self, connected: bool):
-        self._attr_native_value = None
-        super()._connect_changed(connected)
-
-    def __received(self, data: bytes):
+    def _received(self, data: bytes):
         if data[:2] != b"\x01\x00":
             return
         self._attr_native_value = int.from_bytes(data[4:6], "little")
         self.async_write_ha_state()
 
 
-class MESHTempertureEntity(MESHEntity, SensorEntity):
+class MESHTempertureEntity(MESHSensorEntity):
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_name = "Temperture"
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -167,15 +144,7 @@ class MESHTempertureEntity(MESHEntity, SensorEntity):
         super().__init__(core)
         self._attr_unique_id = f"{name}-temperture"
 
-    async def async_added_to_hass(self):
-        await super().async_added_to_hass()
-        self._subscribe(self.core.received, self.__received)
-
-    def _connect_changed(self, connected: bool):
-        self._attr_native_value = None
-        super()._connect_changed(connected)
-
-    def __received(self, data: bytes):
+    def _received(self, data: bytes):
         if data[:2] != b"\x01\x00":
             return
         self._attr_native_value = int.from_bytes(

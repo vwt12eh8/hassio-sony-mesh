@@ -18,13 +18,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
         ])
 
 
-class MESHMotionDelayEntity(MESHEntity, RestoreNumber):
+class MESHMotionEntity(MESHEntity, RestoreNumber):
     core: MESHMD
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:timer-settings"
     _attr_native_max_value = 60000
     _attr_native_min_value = 500
     _attr_native_unit_of_measurement = TIME_MILLISECONDS
+
+
+class MESHMotionDelayEntity(MESHMotionEntity):
+    _attr_native_min_value = 500
 
     def __init__(self, core: MESHMD, name: str):
         super().__init__(core)
@@ -46,13 +50,8 @@ class MESHMotionDelayEntity(MESHEntity, RestoreNumber):
         self.async_write_ha_state()
 
 
-class MESHMotionHoldEntity(MESHEntity, RestoreNumber):
-    core: MESHMD
-    _attr_entity_category = EntityCategory.CONFIG
-    _attr_icon = "mdi:timer-settings"
-    _attr_native_max_value = 60000
+class MESHMotionHoldEntity(MESHMotionEntity):
     _attr_native_min_value = 200
-    _attr_native_unit_of_measurement = TIME_MILLISECONDS
 
     def __init__(self, core: MESHMD, name: str):
         super().__init__(core)
