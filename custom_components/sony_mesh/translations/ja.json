@@ -1,0 +1,20 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "setup": {
+        "title": "MESH™",
+        "description": "「{name}」を追加しますか？"
+      }
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "core_icon": "アイコンが押されたとき",
+      "button_single": "1回押されたとき",
+      "button_double": "2回押されたとき",
+      "button_long": "長押しされたとき",
+      "move_flip": "ひっくり返されたとき"
+    }
+  }
+}

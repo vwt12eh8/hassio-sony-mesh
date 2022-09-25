@@ -1,0 +1,91 @@
+status_turn_on:
+  name: Status LED turn on
+  target:
+    device:
+      integration: sony_mesh
+    entity:
+      integration: sony_mesh
+      domain: light
+      device_class: sony_mesh__status
+  fields:
+    red:
+      name: Red
+      required: true
+      example: true
+      selector:
+        boolean:
+    green:
+      name: Green
+      required: true
+      example: true
+      selector:
+        boolean:
+    blue:
+      name: Blue
+      required: true
+      example: true
+      selector:
+        boolean:
+status_turn_off:
+  name: Status LED turn off
+  target:
+    device:
+      integration: sony_mesh
+    entity:
+      integration: sony_mesh
+      domain: light
+      device_class: sony_mesh__status
+led_turn_on:
+  name: LED turn on
+  target:
+    device:
+      integration: sony_mesh
+      model: MESH-100LE
+    entity:
+      integration: sony_mesh
+      domain: light
+      device_class: sony_mesh__led
+  fields:
+    color:
+      name: Color
+      required: true
+      example: "[255, 255, 255]"
+      selector:
+        color_rgb:
+    duration:
+      name: Duration
+      default: 65535
+      selector:
+        number:
+          min: 0
+          max: 65535
+          step: 10
+          mode: box
+          unit_of_measurement: ms
+    on_cycle:
+      name: ON cycle
+      default: 65535
+      selector:
+        number:
+          min: 0
+          max: 65535
+          step: 10
+          mode: box
+          unit_of_measurement: ms
+    off_cycle:
+      name: OFF cycle
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 65535
+          step: 10
+          mode: box
+          unit_of_measurement: ms
+    pattern:
+      name: Pattern
+      selector:
+        select:
+          options:
+            - Blink
+            - Firefly

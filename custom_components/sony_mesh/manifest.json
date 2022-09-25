@@ -1,0 +1,23 @@
+{
+  "domain": "sony_mesh",
+  "name": "MESH™",
+  "version": "1.0",
+  "documentation": "https://github.com/vwt12eh8/hassio-sony-mesh",
+  "issue_tracker": "https://github.com/vwt12eh8/hassio-sony-mesh/issues",
+  "dependencies": [
+    "bluetooth"
+  ],
+  "requirements": [
+    "reactivex"
+  ],
+  "config_flow": true,
+  "codeowners": [
+    "@vwt12eh8"
+  ],
+  "bluetooth": [
+    {
+      "local_name": "MESH-100*"
+    }
+  ],
+  "iot_class": "local_push"
+}

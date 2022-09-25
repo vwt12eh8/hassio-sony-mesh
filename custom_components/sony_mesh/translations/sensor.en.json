@@ -1,0 +1,12 @@
+{
+  "state": {
+    "sony_mesh__orientation": {
+      "left": "Left",
+      "bottom": "Botton",
+      "front": "Front",
+      "back": "Back",
+      "top": "Top",
+      "right": "Right"
+    }
+  }
+}

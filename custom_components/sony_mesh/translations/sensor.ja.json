@@ -1,0 +1,12 @@
+{
+  "state": {
+    "sony_mesh__orientation": {
+      "left": "左面",
+      "bottom": "下面",
+      "front": "表面",
+      "back": "裏面",
+      "top": "上面",
+      "right": "右面"
+    }
+  }
+}

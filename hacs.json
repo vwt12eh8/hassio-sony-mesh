@@ -1,0 +1,9 @@
+{
+  "name": "MESH™",
+  "render_readme": true,
+  "country": [
+    "JP",
+    "EN"
+  ],
+  "homeassistant": "2022.9.0"
+}
