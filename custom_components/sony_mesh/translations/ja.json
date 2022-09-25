@@ -3,7 +3,7 @@
     "flow_title": "{name}",
     "step": {
       "setup": {
-        "description": "「{name}」を追加しますか？"
+        "description": "{name} をセットアップしますか？"
       }
     }
   },

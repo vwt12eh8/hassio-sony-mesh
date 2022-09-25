@@ -3,7 +3,7 @@
     "flow_title": "{name}",
     "step": {
       "setup": {
-        "description": "Do you want to add \"{name}\"?"
+        "description": "Do you want to setup {name}?"
       }
     }
   },
