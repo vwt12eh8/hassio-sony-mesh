@@ -12,7 +12,7 @@
 * [x] MESH-100LE
 * [x] MESH-100MD
 * [x] MESH-100PA
-* [ ] MESH-100TM
+* [x] MESH-100TH
 
 ## References
 * MESH™ official site ([English](https://meshprj.com/en/) / [Japanese](https://meshprj.com/jp/))

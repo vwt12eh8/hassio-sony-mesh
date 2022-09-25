@@ -174,6 +174,11 @@ class MESHPA(MESHCore):
         await self.send_cmd(pack("<BBBQHBBBB", 1, 0, 0, 0, 0, 2, 2, 2, 0x1C))
 
 
+class MESHTH(MESHCore):
+    async def _connected(self):
+        await self.send_cmd(pack("<BBBQHB", 1, 0, 0, 0, 0, 0x1C))
+
+
 class MESHEntity(Entity):
     _attr_has_entity_name = True
     _attr_should_poll = False
