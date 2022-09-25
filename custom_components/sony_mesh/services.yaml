@@ -1,5 +1,6 @@
 status_turn_on:
   name: Status LED turn on
+  description: Turn on the status light.
   target:
     device:
       integration: sony_mesh
@@ -10,24 +11,28 @@ status_turn_on:
   fields:
     red:
       name: Red
+      description: Red LED illuminated or not.
       required: true
       example: true
       selector:
         boolean:
     green:
       name: Green
+      description: Green LED illuminated or not.
       required: true
       example: true
       selector:
         boolean:
     blue:
       name: Blue
+      description: Blue LED illuminated or not.
       required: true
       example: true
       selector:
         boolean:
 status_turn_off:
   name: Status LED turn off
+  description: Cancels the lighting of the status light.
   target:
     device:
       integration: sony_mesh
@@ -37,6 +42,7 @@ status_turn_off:
       device_class: sony_mesh__status
 led_turn_on:
   name: LED turn on
+  description: Turn on the LED block by specifying additional parameters.
   target:
     device:
       integration: sony_mesh
@@ -48,12 +54,14 @@ led_turn_on:
   fields:
     color:
       name: Color
+      description: Lighting color and brightness.
       required: true
       example: "[255, 255, 255]"
       selector:
         color_rgb:
     duration:
       name: Duration
+      description: Lighting time.
       default: 65535
       selector:
         number:
@@ -64,6 +72,7 @@ led_turn_on:
           unit_of_measurement: ms
     on_cycle:
       name: ON cycle
+      description: Lighting cycle.
       default: 65535
       selector:
         number:
@@ -74,6 +83,7 @@ led_turn_on:
           unit_of_measurement: ms
     off_cycle:
       name: OFF cycle
+      description: OFF cycle.
       default: 0
       selector:
         number:
@@ -84,6 +94,7 @@ led_turn_on:
           unit_of_measurement: ms
     pattern:
       name: Pattern
+      description: Lighting pattern.
       selector:
         select:
           options:

@@ -3,7 +3,6 @@
     "flow_title": "{name}",
     "step": {
       "setup": {
-        "title": "MESH™",
         "description": "Do you want to add \"{name}\"?"
       }
     }
