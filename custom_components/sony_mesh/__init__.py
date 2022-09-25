@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from asyncio import Future, create_task
+from struct import pack
 from typing import Callable, Iterable
 
 from bleak import BleakClient
@@ -25,7 +26,9 @@ CORE_WRITE_UUID = ('72c90004-57a9-4d40-b746-534e22ec9f9e')
 CMD_FEATURE_ENABLE = b"\x00\x02\x01\x03"
 
 _PLATFORMS = {
+    Platform.BINARY_SENSOR,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
 }
@@ -77,6 +80,9 @@ class MESHCore:
             raise Exception(self.name + " is not connected")
         await self.client.write_gatt_char(CORE_WRITE_UUID, data, True)
 
+    async def _connected(self):
+        pass
+
     def _received(self, sender, data: bytearray):
         data = bytes(data)
         self.received.on_next(data)
@@ -116,6 +122,7 @@ class MESHCore:
                 await client.start_notify(CORE_NOTIFY_UUID, self._received)
                 await client.start_notify(CORE_INDICATE_UUID, self._received)
                 await self.send(CMD_FEATURE_ENABLE)
+                await self._connected()
                 self.connect_changed.on_next(True)
                 await self.disconnect
         finally:
@@ -144,6 +151,22 @@ class MESHBU(MESHCore):
                     CONF_NAME: self.name,
                     "type": BUTTON_PUSH_TYPES[data[2]],
                 }, EventOrigin.remote)
+
+
+class MESHMD(MESHCore):
+    delay_time = 500
+    hold_time = 500
+
+    async def send_config(self, init=False):
+        if not self.client:
+            return
+        mode = 0x03
+        if init:
+            mode |= 0x10
+        await self.send_cmd(pack("<BBBBHH", 1, 0, 0, mode, self.hold_time, self.delay_time))
+
+    async def _connected(self):
+        await self.send_config(True)
 
 
 class MESHEntity(Entity):
@@ -182,6 +205,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         core = MESHAC(hass, entry)
     elif name.startswith("MESH-100BU"):
         core = MESHBU(hass, entry)
+    elif name.startswith("MESH-100MD"):
+        core = MESHMD(hass, entry)
     else:
         core = MESHCore(hass, entry)
     entry.async_on_unload(bluetooth.async_register_callback(hass, core.on_found, {
