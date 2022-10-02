@@ -116,8 +116,8 @@ class MESHAnalogInputEntity(MESHSensorEntity):
 class MESHHumidityEntity(MESHSensorEntity):
     _attr_device_class = SensorDeviceClass.HUMIDITY
     _attr_name = "Humidity"
-    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, core: MESHCore, name: str):
         super().__init__(core)
@@ -133,8 +133,8 @@ class MESHHumidityEntity(MESHSensorEntity):
 class MESHIlluminanceEntity(MESHSensorEntity):
     _attr_device_class = SensorDeviceClass.ILLUMINANCE
     _attr_name = "Illuminance"
-    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = LIGHT_LUX
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, core: MESHCore, name: str):
         super().__init__(core)
@@ -180,8 +180,8 @@ class MESHProximityEntity(MESHSensorEntity):
 class MESHTempertureEntity(MESHSensorEntity):
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_name = "Temperture"
-    _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = TEMP_CELSIUS
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, core: MESHCore, name: str):
         super().__init__(core)

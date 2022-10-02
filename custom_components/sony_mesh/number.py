@@ -53,8 +53,6 @@ class MESHMotionEntity(MESHEntity, RestoreNumber):
 
 
 class MESHMotionDelayEntity(MESHMotionEntity):
-    _attr_native_min_value = 500
-
     def __init__(self, core: MESHMD, name: str):
         super().__init__(core)
         self._attr_unique_id = f"{name}-delay"
