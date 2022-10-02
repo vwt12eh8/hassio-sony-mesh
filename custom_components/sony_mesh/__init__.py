@@ -247,10 +247,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         core = MESHAC(hass, entry)
     elif name.startswith("MESH-100BU"):
         core = MESHBU(hass, entry)
+    elif name.startswith("MESH-100GP"):
+        core = MESHGP(hass, entry)
     elif name.startswith("MESH-100MD"):
         core = MESHMD(hass, entry)
     elif name.startswith("MESH-100PA"):
         core = MESHPA(hass, entry)
+    elif name.startswith("MESH-100TH"):
+        core = MESHTH(hass, entry)
     else:
         core = MESHCore(hass, entry)
     entry.async_on_unload(bluetooth.async_register_callback(hass, core.on_found, {
