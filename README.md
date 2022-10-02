@@ -8,7 +8,7 @@
 ## implemented block
 * [x] MESH-100AC
 * [x] MESH-100BU
-* [ ] MESH-100GP
+* [x] MESH-100GP
 * [x] MESH-100LE
 * [x] MESH-100MD
 * [x] MESH-100PA

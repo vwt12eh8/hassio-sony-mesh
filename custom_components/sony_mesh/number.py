@@ -1,21 +1,46 @@
-from homeassistant.components.number import RestoreNumber
+from homeassistant.components.number import NumberEntity, RestoreNumber
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, TIME_MILLISECONDS
+from homeassistant.const import (CONF_NAME, ELECTRIC_POTENTIAL_VOLT,
+                                 TIME_MILLISECONDS)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MESHMD, MESHCore, MESHEntity
+from . import MESHGP, MESHMD, MESHCore, MESHEntity
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     core: MESHCore = hass.data[entry.entry_id]
     name: str = entry.data[CONF_NAME]
-    if name.startswith("MESH-100MD"):
+    if name.startswith("MESH-100GP"):
+        async_add_entities([
+            MESHAnalogOutputEntity(core, name),
+        ])
+    elif name.startswith("MESH-100MD"):
         async_add_entities([
             MESHMotionDelayEntity(core, name),
             MESHMotionHoldEntity(core, name),
         ])
+
+
+class MESHAnalogOutputEntity(MESHEntity, NumberEntity):
+    core: MESHGP
+    _attr_device_class = "voltage"
+    _attr_icon = "mdi:square-wave"
+    _attr_name = "PWM"
+    _attr_native_max_value = 3.0
+    _attr_native_min_value = 0.0
+    _attr_native_step = 0.01
+    _attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
+
+    @property
+    def native_value(self):
+        return round(self.core.aout * 3.0 / 255, 2)
+
+    async def set_native_value(self, value: float):
+        self.core.aout = round(value * 255 / 3.0)
+        await self.core.send_config()
+        self.async_write_ha_state()
 
 
 class MESHMotionEntity(MESHEntity, RestoreNumber):

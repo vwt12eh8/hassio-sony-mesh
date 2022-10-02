@@ -153,6 +153,38 @@ class MESHBU(MESHCore):
                 }, EventOrigin.remote)
 
 
+class MESHGP(MESHCore):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
+        super().__init__(hass, entry)
+        self.ain = False
+        self.din = [False, False, False]
+        self._reset_output()
+
+    async def send_config(self):
+        if not self.client:
+            return
+        din = sum(1 << i for i in range(3) if self.din[i])
+        dout = sum(1 << i for i in range(3) if self.dout[i])
+        await self.send_cmd(pack(
+            "<BBBBBBBBBB",
+            1, 1,
+            din, din,
+            dout, self.aout,
+            1 if self.power else 2,
+            255, 0,
+            0x22 if self.ain else 0x00,
+        ))
+
+    async def _connected(self):
+        self._reset_output()
+        await self.send_config(True)
+
+    def _reset_output(self):
+        self.aout = 0
+        self.dout = [False, False, False]
+        self.power = False
+
+
 class MESHMD(MESHCore):
     delay_time = 500
     hold_time = 500
