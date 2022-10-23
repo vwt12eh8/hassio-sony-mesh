@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from asyncio import Future, create_task
+from asyncio import Future, create_task, wait_for
+from logging import getLogger
 from struct import pack
 from typing import Callable, Iterable
 
 from bleak import BleakClient
+from bleak.backends.device import BLEDevice
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (BluetoothChange,
                                                 BluetoothServiceInfoBleak)
@@ -15,6 +17,7 @@ from homeassistant.core import EventOrigin, HomeAssistant
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from reactivex import Observable, Subject
+from reactivex import operators as ops
 from reactivex.subject.behaviorsubject import BehaviorSubject
 
 DOMAIN = "sony_mesh"
@@ -40,10 +43,13 @@ BUTTON_PUSH_TYPES = {
     3: "double",
 }
 
+_LOGGER = getLogger(__name__)
+
 
 class MESHCore:
     client = None
-    __lock = False
+    info = None
+    __task = None
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry):
         self.hass = hass
@@ -62,15 +68,15 @@ class MESHCore:
 
     def close(self):
         self.client = None
-        if hasattr(self, "disconnect") and not self.disconnect.done():
-            self.disconnect.set_result(None)
+        if self.__task is not None:
+            self.__task.cancel()
 
     def on_found(self, service: BluetoothServiceInfoBleak, change: BluetoothChange):
         if not service.connectable:
             return
-        if self.__lock:
+        if self.__task is not None:
             return
-        create_task(self.__loop(service.device))
+        self.__task = create_task(self.__loop(service.device))
 
     async def send_cmd(self, data: bytes):
         await self.send(add_checksum(data))
@@ -95,6 +101,8 @@ class MESHCore:
                 identifiers=self.device_info["identifiers"],
                 sw_version=self.device_info["sw_version"],
             ).id
+            if self.info is not None and not self.info.done():
+                self.info.set_result(None)
         elif data[:2] == b"\x00\x01":
             self.hass.bus.async_fire("sony_mesh_icon", {
                 CONF_DEVICE_ID: self.device_id,
@@ -103,30 +111,42 @@ class MESHCore:
         elif data[:2] == b"\x00\x00":
             self.battery.on_next(data[2] * 10)
 
-    async def __loop(self, device):
-        if self.__lock:
-            return
-        self.__lock = True
+    async def __loop(self, device: BLEDevice):
         try:
+            _LOGGER.debug(f"Connecting {device.name}")
             async with BleakClient(device) as client:
-                self.disconnect = Future()
+                self.info = Future()
+                _LOGGER.debug(f"Enable {device.name} indicate")
+                await client.start_notify(CORE_INDICATE_UUID, self._received, force_indicate=True)
+                _LOGGER.debug(f"Waiting {device.name} indicate")
+                await wait_for(self.info, 10)
+                _LOGGER.debug(f"Enable {device.name} notify")
+                await client.start_notify(CORE_NOTIFY_UUID, self._received)
+                self.client = client
+                _LOGGER.debug(f"Enable {device.name} feature")
+                await wait_for(self.send(CMD_FEATURE_ENABLE), 5)
+                _LOGGER.debug(f"Configure {device.name}")
+                await self._connected()
 
                 def on_disconnected(client: BleakClient):
                     client._disconnected_callback = None
                     self.connect_changed.on_next(False)
                     self.battery.on_next(None)
-                    self.close()
-
+                if not client.is_connected:
+                    on_disconnected(client)
+                    return
                 client.set_disconnected_callback(on_disconnected)
-                self.client = client
-                await client.start_notify(CORE_NOTIFY_UUID, self._received)
-                await client.start_notify(CORE_INDICATE_UUID, self._received)
-                await self.send(CMD_FEATURE_ENABLE)
-                await self._connected()
                 self.connect_changed.on_next(True)
-                await self.disconnect
+                _LOGGER.debug(f"Connected {device.name}")
+                await self.connect_changed.pipe(
+                    ops.first(lambda x: x is not True),
+                )
         finally:
-            self.__lock = False
+            _LOGGER.debug(f"Disconnected {device.name}")
+            self.client = None
+            self.__task = None
+            bluetooth._get_manager(self.hass)._connectable_history.pop(
+                device.address, None)
 
 
 class MESHAC(MESHCore):
