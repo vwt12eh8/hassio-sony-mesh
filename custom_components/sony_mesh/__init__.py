@@ -10,6 +10,7 @@ from bleak.backends.device import BLEDevice
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (BluetoothChange,
                                                 BluetoothServiceInfoBleak)
+from homeassistant.components.bluetooth.models import HaBleakClientWrapper
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (CONF_ADDRESS, CONF_DEVICE_ID, CONF_NAME,
                                  CONF_TYPE, Platform)
@@ -111,10 +112,15 @@ class MESHCore:
         elif data[:2] == b"\x00\x00":
             self.battery.on_next(data[2] * 10)
 
+    def __disconnected(self, client: BleakClient):
+        client.set_disconnected_callback(None)
+        self.connect_changed.on_next(False)
+        self.battery.on_next(None)
+
     async def __loop(self, device: BLEDevice):
         try:
             _LOGGER.debug(f"Connecting {device.name}")
-            async with BleakClient(device) as client:
+            async with HaBleakClientWrapper(device, self.__disconnected) as client:
                 self.info = Future()
                 _LOGGER.debug(f"Enable {device.name} indicate")
                 await client.start_notify(CORE_INDICATE_UUID, self._received, force_indicate=True)
@@ -128,14 +134,8 @@ class MESHCore:
                 _LOGGER.debug(f"Configure {device.name}")
                 await self._connected()
 
-                def on_disconnected(client: BleakClient):
-                    client._disconnected_callback = None
-                    self.connect_changed.on_next(False)
-                    self.battery.on_next(None)
                 if not client.is_connected:
-                    on_disconnected(client)
                     return
-                client.set_disconnected_callback(on_disconnected)
                 self.connect_changed.on_next(True)
                 _LOGGER.debug(f"Connected {device.name}")
                 await self.connect_changed.pipe(
