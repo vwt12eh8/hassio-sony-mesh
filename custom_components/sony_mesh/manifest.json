@@ -2,6 +2,7 @@
   "domain": "sony_mesh",
   "name": "MESH™",
   "version": "1.0",
+  "integration_type": "device",
   "documentation": "https://github.com/vwt12eh8/hassio-sony-mesh",
   "issue_tracker": "https://github.com/vwt12eh8/hassio-sony-mesh/issues",
   "dependencies": [
