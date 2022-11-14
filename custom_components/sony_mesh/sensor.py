@@ -1,3 +1,5 @@
+from abc import abstractclassmethod
+
 from homeassistant.components.sensor import (SensorDeviceClass, SensorEntity,
                                              SensorStateClass)
 from homeassistant.config_entries import ConfigEntry
@@ -7,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MESHGP, MESHCore, MESHEntity
+from . import MESHAC, MESHGP, MESHPA, MESHTH, MESHCore, MESHEntity
 
 _ORIENTATIONS = {
     1: "left",
@@ -25,20 +27,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     async_add_entities([
         MESHBatteryEntity(core, name),
     ])
-    if name.startswith("MESH-100AC"):
+    if type(core) is MESHAC:
         async_add_entities([
             MESHOrientationEntity(core, name),
         ])
-    elif name.startswith("MESH-100GP"):
+    elif type(core) is MESHGP:
         async_add_entities([
             MESHAnalogInputEntity(core, name),
         ])
-    elif name.startswith("MESH-100PA"):
+    elif type(core) is MESHPA:
         async_add_entities([
             MESHIlluminanceEntity(core, name),
             MESHProximityEntity(core, name),
         ])
-    elif name.startswith("MESH-100TH"):
+    elif type(core) is MESHTH:
         async_add_entities([
             MESHHumidityEntity(core, name),
             MESHTempertureEntity(core, name),
@@ -73,6 +75,10 @@ class MESHSensorEntity(MESHEntity, SensorEntity):
     def _connect_changed(self, connected: bool):
         self._attr_native_value = None
         super()._connect_changed(connected)
+
+    @abstractclassmethod
+    def _received(self, data: bytes):
+        ...
 
 
 class MESHAnalogInputEntity(MESHSensorEntity):
@@ -119,7 +125,7 @@ class MESHHumidityEntity(MESHSensorEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, core: MESHCore, name: str):
+    def __init__(self, core: MESHTH, name: str):
         super().__init__(core)
         self._attr_unique_id = f"{name}-humidity"
 
@@ -136,7 +142,7 @@ class MESHIlluminanceEntity(MESHSensorEntity):
     _attr_native_unit_of_measurement = LIGHT_LUX
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, core: MESHCore, name: str):
+    def __init__(self, core: MESHPA, name: str):
         super().__init__(core)
         self._attr_unique_id = f"{name}-illuminance"
 
@@ -151,7 +157,7 @@ class MESHOrientationEntity(MESHSensorEntity):
     _attr_name = "Orientation"
     _attr_device_class = "sony_mesh__orientation"
 
-    def __init__(self, core: MESHCore, name: str):
+    def __init__(self, core: MESHAC, name: str):
         super().__init__(core)
         self._attr_unique_id = f"{name}-orientation"
 
@@ -166,7 +172,7 @@ class MESHProximityEntity(MESHSensorEntity):
     _attr_name = "Proximity"
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, core: MESHCore, name: str):
+    def __init__(self, core: MESHPA, name: str):
         super().__init__(core)
         self._attr_unique_id = f"{name}-proximity"
 
@@ -183,7 +189,7 @@ class MESHTempertureEntity(MESHSensorEntity):
     _attr_native_unit_of_measurement = TEMP_CELSIUS
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, core: MESHCore, name: str):
+    def __init__(self, core: MESHTH, name: str):
         super().__init__(core)
         self._attr_unique_id = f"{name}-temperture"
 

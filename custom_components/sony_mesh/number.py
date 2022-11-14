@@ -12,11 +12,11 @@ from . import MESHGP, MESHMD, MESHCore, MESHEntity
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     core: MESHCore = hass.data[entry.entry_id]
     name: str = entry.data[CONF_NAME]
-    if name.startswith("MESH-100GP"):
+    if type(core) is MESHGP:
         async_add_entities([
             MESHAnalogOutputEntity(core, name),
         ])
-    elif name.startswith("MESH-100MD"):
+    elif type(core) is MESHMD:
         async_add_entities([
             MESHMotionDelayEntity(core, name),
             MESHMotionHoldEntity(core, name),
@@ -32,6 +32,10 @@ class MESHAnalogOutputEntity(MESHEntity, NumberEntity):
     _attr_native_min_value = 0.0
     _attr_native_step = 0.01
     _attr_native_unit_of_measurement = ELECTRIC_POTENTIAL_VOLT
+
+    def __init__(self, core: MESHGP, name: str):
+        super().__init__(core)
+        self._attr_unique_id = f"{name}-pwm"
 
     @property
     def native_value(self):
@@ -64,7 +68,8 @@ class MESHMotionDelayEntity(MESHMotionEntity):
     async def async_added_to_hass(self):
         await super().async_added_to_hass()
         if data := await self.async_get_last_number_data():
-            self.core.delay_time = int(data.native_value)
+            if data.native_value is not None:
+                self.core.delay_time = int(data.native_value)
             await self.core.send_config()
 
     async def async_set_native_value(self, value: float):
@@ -87,7 +92,8 @@ class MESHMotionHoldEntity(MESHMotionEntity):
     async def async_added_to_hass(self):
         await super().async_added_to_hass()
         if data := await self.async_get_last_number_data():
-            self.core.hold_time = int(data.native_value)
+            if data.native_value is not None:
+                self.core.hold_time = int(data.native_value)
             await self.core.send_config()
 
     async def async_set_native_value(self, value: float):

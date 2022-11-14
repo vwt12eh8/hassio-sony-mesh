@@ -1,3 +1,4 @@
+from abc import abstractclassmethod
 from struct import pack
 
 from homeassistant.components.binary_sensor import (BinarySensorDeviceClass,
@@ -7,19 +8,19 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MESHGP, MESHCore, MESHEntity
+from . import MESHGP, MESHMD, MESHCore, MESHEntity
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback):
     core: MESHCore = hass.data[entry.entry_id]
     name: str = entry.data[CONF_NAME]
-    if name.startswith("MESH-100GP"):
+    if type(core) is MESHGP:
         async_add_entities([
             MESHDigitalInputEntity(core, name, 1),
             MESHDigitalInputEntity(core, name, 2),
             MESHDigitalInputEntity(core, name, 3),
         ])
-    elif name.startswith("MESH-100MD"):
+    elif type(core) is MESHMD:
         async_add_entities([
             MESHMotionEntity(core, name),
         ])
@@ -34,12 +35,16 @@ class MESHBinarySensorEntity(MESHEntity, BinarySensorEntity):
         self._attr_is_on = None
         super()._connect_changed(connected)
 
+    @abstractclassmethod
+    def _received(self, data: bytes):
+        ...
+
 
 class MESHDigitalInputEntity(MESHBinarySensorEntity):
     core: MESHGP
     _attr_device_class = BinarySensorDeviceClass.POWER
 
-    def __init__(self, core: MESHCore, name: str, pin: int):
+    def __init__(self, core: MESHGP, name: str, pin: int):
         super().__init__(core)
         self.pin = pin
         self._attr_unique_id = f"{name}-din{pin}"
@@ -78,7 +83,7 @@ class MESHDigitalInputEntity(MESHBinarySensorEntity):
 class MESHMotionEntity(MESHBinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.MOTION
 
-    def __init__(self, core: MESHCore, name: str):
+    def __init__(self, core: MESHMD, name: str):
         super().__init__(core)
         self._attr_unique_id = name
 

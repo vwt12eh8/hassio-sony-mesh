@@ -91,26 +91,26 @@ class MESHCore:
         pass
 
     def _received(self, sender, data: bytearray):
-        data = bytes(data)
-        self.received.on_next(data)
-        if data[:2] == b"\x00\x02":
-            self.battery.on_next(data[14] * 10)
+        d = bytes(data)
+        self.received.on_next(d)
+        if d[:2] == b"\x00\x02":
+            self.battery.on_next(d[14] * 10)
             self.device_info["sw_version"] = ".".join(
-                str(x) for x in data[7:10])
+                str(x) for x in d[7:10])
             self.device_id = self.dr.async_get_or_create(
                 config_entry_id=self.entry_id,
-                identifiers=self.device_info["identifiers"],
+                identifiers=self.device_info.get("identifiers"),
                 sw_version=self.device_info["sw_version"],
             ).id
             if self.info is not None and not self.info.done():
                 self.info.set_result(None)
-        elif data[:2] == b"\x00\x01":
+        elif d[:2] == b"\x00\x01":
             self.hass.bus.async_fire("sony_mesh_icon", {
                 CONF_DEVICE_ID: self.device_id,
                 CONF_NAME: self.name,
             }, EventOrigin.remote)
-        elif data[:2] == b"\x00\x00":
-            self.battery.on_next(data[2] * 10)
+        elif d[:2] == b"\x00\x00":
+            self.battery.on_next(d[2] * 10)
 
     def __disconnected(self, client: BleakClient):
         client.set_disconnected_callback(None)
@@ -197,7 +197,7 @@ class MESHGP(MESHCore):
 
     async def _connected(self):
         self._reset_output()
-        await self.send_config(True)
+        await self.send_config()
 
     def _reset_output(self):
         self.aout = 0

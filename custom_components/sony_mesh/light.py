@@ -29,24 +29,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     async_add_entities([
         MESHStatusLedEntity(core, name),
     ])
-    platform.async_register_entity_service("status_turn_on", {
+    platform.async_register_entity_service("status_turn_on", vol.Schema({
         vol.Required("red"): cv.boolean,
         vol.Required("green"): cv.boolean,
         vol.Required("blue"): cv.boolean,
-    }, _service_status_turn_on)
+    }), _service_status_turn_on)
     platform.async_register_entity_service(
         "status_turn_off", {}, _service_status_turn_off)
     if name.startswith("MESH-100LE"):
         async_add_entities([
             MESHLedEntity(core, name),
         ])
-        platform.async_register_entity_service("led_turn_on", {
+        platform.async_register_entity_service("led_turn_on", vol.Schema({
             vol.Required("color"): selector.ColorRGBSelector(),
             vol.Optional("duration"): vol.Range(0, 0xFFFF),
             vol.Optional("on_cycle"): vol.Range(0, 0xFFFF),
             vol.Optional("off_cycle"): vol.Range(0, 0xFFFF),
             vol.Optional("pattern"): vol.In(list(_LED_PATTERNS.keys())),
-        }, _service_led_turn_on)
+        }), _service_led_turn_on)
 
 
 class MESHLedEntity(MESHEntity, LightEntity):
@@ -75,7 +75,7 @@ class MESHLedEntity(MESHEntity, LightEntity):
         self._attr_is_on = False
         self.async_write_ha_state()
 
-    async def async_turn_on(self, brightness: int = None, rgb_color: tuple[int, int, int] = None, **kwargs):
+    async def async_turn_on(self, brightness: int | None = None, rgb_color: tuple[int, int, int] | None = None, **kwargs):
         if brightness is not None:
             self._attr_brightness = brightness
         if rgb_color is not None:
@@ -94,9 +94,11 @@ class MESHLedEntity(MESHEntity, LightEntity):
         super()._connect_changed(connected)
 
     async def _set_led(self, duration=0xFFFF, on=0xFFFF, off=0, pattern=1):
-        red = self.rgb_color[0] * self.brightness * 127 / 255 / 255
-        green = self.rgb_color[1] * self.brightness * 127 / 255 / 255
-        blue = self.rgb_color[2] * self.brightness * 127 / 255 / 255
+        brightness = self.brightness or 0
+        rgb_color = self.rgb_color or (0, 0, 0)
+        red = rgb_color[0] * brightness * 127 / 255 / 255
+        green = rgb_color[1] * brightness * 127 / 255 / 255
+        blue = rgb_color[2] * brightness * 127 / 255 / 255
         data = pack('<BBBBBBBHHHB',
                     1, 0,
                     round(red), 0, round(green), 0, round(blue),
@@ -173,5 +175,5 @@ async def _service_led_turn_on(entity: MESHEntity, call: service.ServiceCall):
         call.data.get("duration", 0xFFFF),
         call.data.get("on_cycle", 0xFFFF),
         call.data.get("off_cycle", 0),
-        _LED_PATTERNS.get(call.data.get("pattern"), 1),
+        _LED_PATTERNS.get(call.data.get("pattern", ""), 1),
     )

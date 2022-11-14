@@ -23,10 +23,10 @@ class MESHConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(step_id="setup")
 
-    async def async_step_setup(self, user_input: Mapping[str, Any] = None):
+    async def async_step_setup(self, user_input: Mapping[str, Any] | None = None):
         if user_input is not None:
             return self.async_create_entry(
-                title=self.name,
+                title=self.name or "",
                 data={
                     CONF_ADDRESS: self.address,
                     CONF_NAME: self.name,

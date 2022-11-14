@@ -27,7 +27,8 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 async def async_get_triggers(hass: HomeAssistant, device_id: str):
     dr = device_registry.async_get(hass)
-    device = dr.async_get(device_id)
+    if not (device := dr.async_get(device_id)):
+        return []
     name = next(x[1] for x in device.identifiers if x[0] == DOMAIN)
     triggers = [
         {

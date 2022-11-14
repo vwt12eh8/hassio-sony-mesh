@@ -14,7 +14,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     async_add_entities([
         MESHPowerEntity(core, name),
     ])
-    if name.startswith("MESH-100GP"):
+    if type(core) is MESHGP:
         async_add_entities([
             MESHDigitalOutputEntity(core, name, 1),
             MESHDigitalOutputEntity(core, name, 2),
@@ -30,12 +30,10 @@ class MESHOutputEntity(MESHEntity, SwitchEntity):
 
 
 class MESHDigitalOutputEntity(MESHOutputEntity):
-    _attr_name = "DOUT"
-
     def __init__(self, core: MESHGP, name: str, pin: int):
         super().__init__(core)
         self.pin = pin
-        self._attr_name += pin.__str__()
+        self._attr_name = f"DOUT{pin}"
         self._attr_unique_id = f"{name}-dout{pin}"
 
     @property
@@ -58,7 +56,6 @@ class MESHPowerOutputEntity(MESHOutputEntity):
 
     def __init__(self, core: MESHGP, name: str):
         super().__init__(core)
-        self._attr_name
         self._attr_unique_id = f"{name}-vout"
 
     @property
